@@ -135,22 +135,42 @@ def has_description(node):
     return False
 
 
-def check_projects(root):
-    section = find_section(root, "projects")
+# def check_projects(root):
+#     section = find_section(root, "projects")
+#     if section is None:
+#         return False, '#projects section not found'
+
+#     # Count direct or shallow child containers that have a heading + description
+#     entries = []
+#     for child in section.children:
+#         if child.tag in ("div", "article", "li", "section"):
+#             if has_heading(child) and has_description(child):
+#                 entries.append(child)
+
+#     if len(entries) < 2:
+#         return False, f'#projects has {len(entries)} complete project entry/entries -> need at least 2, each with a heading + description)'
+#     return True, f'#projects has {len(entries)} project entries'
+def check_experience(root):
+    section = find_section(root, "experience")
     if section is None:
-        return False, '#projects section not found'
+        return False, '#experience section not found'
 
-    # Count direct or shallow child containers that have a heading + description
-    entries = []
-    for child in section.children:
-        if child.tag in ("div", "article", "li", "section"):
-            if has_heading(child) and has_description(child):
-                entries.append(child)
+    headings = []
+    for tag in ("h1", "h2", "h3", "h4", "h5", "h6"):
+        headings.extend(section.find_all(tag))
 
-    if len(entries) < 2:
-        return False, f'#projects has {len(entries)} complete project entry/entries -> need at least 2, each with a heading + description)'
-    return True, f'#projects has {len(entries)} project entries'
+    paragraphs = []
+    for node in section.find_all("p"):
+        if word_count(node.text) > 0:
+            paragraphs.append(node)
 
+    if len(headings) < 2:
+        return False, f'#experience has {len(headings)} header(s) -> need at least 2'
+
+    if len(paragraphs) < 2:
+        return False, f'#experience has {len(paragraphs)} non-empty <p> section(s) -> need at least 2'
+
+    return True, f'#experience has {len(headings)} headers and {len(paragraphs)} non-empty paragraphs'
 
 def check_skills(root):
     section = find_section(root, "skills")
@@ -166,7 +186,6 @@ def check_skills(root):
     if len(items) < 3:
         return False, f'#skills has {len(items)} non-empty item(s) -> should have at least 3'
     return True, f'#skills has {len(items)} skill items'
-
 
 def check_contact(root):
     section = find_section(root, "contact")
@@ -188,7 +207,7 @@ def check_contact(root):
 CHECKS = [
     ("<title> was updated",          check_title),
     ("#about has enough text",   check_about),
-    ("#projects has 2+ entries", check_projects),
+    ("#projects has 2+ entries", check_experience),
     ("#skills has 3+ items",     check_skills),
     ("#contact has a real link",   check_contact),
 ]
